@@ -7,20 +7,19 @@ username = ARGV[1]
 password = ARGV[2]
 
 connection = Faraday.new(url: "https://#{servername}:8006", ssl: {verify: false}) do |conn|
-  conn.request  :multipart
   conn.request  :url_encoded
   conn.adapter  Faraday.default_adapter
 end
 
 resp =  connection.post("/api2/json/access/ticket") do |req|
-  req.body = { "username" => username, "password" => password }
+  req.body = { username: username, password: password }
 end
 
 data = JSON.parse(resp.body, symbolize_names: true)
+p data[:data]
 ticket = data[:data][:ticket]
 
 connection = Faraday.new(url: "https://#{servername}:8006", ssl: {verify: false}) do |conn|
-  conn.request  :multipart
   conn.request  :url_encoded
   conn.headers["Cookie"] = "PVEAuthCookie=#{ticket}"
   conn.adapter  Faraday.default_adapter

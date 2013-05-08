@@ -2,6 +2,21 @@
 
 Provide an interface to the proxmox API
 
+## Usage
+
+At present, all you get is a Faraday::Connection instance, with the appropriate
+auth ticket set - usage is clunky but as follows:
+
+    require 'proxmox_ruby'
+
+    fact = ProxmoxRuby::ConnectionFactory.new
+
+    fact.get_tokens "proxmox_host.test.com","root@pam","my_secret_password"
+
+    connection = fact.build_connection
+
+    resp = connection.get("/api2/json/nodes") # resp is an instance of Faraday::Response
+
 ## Licence
 
 proxmox\_ruby is licenced under the MIT licence.

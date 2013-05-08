@@ -19,9 +19,14 @@ end
 data = JSON.parse(resp.body, symbolize_names: true)
 ticket = data[:data][:ticket]
 
-resp = connection.get("/api2/json/nodes") do |req|
-  req.headers["Cookie"] = "PVEAuthCookie=#{ticket}"
+connection = Faraday.new(url: "https://#{servername}:8006", ssl: {verify: false}) do |conn|
+  conn.request  :multipart
+  conn.request  :url_encoded
+  conn.headers["Cookie"] = "PVEAuthCookie=#{ticket}"
+  conn.adapter  Faraday.default_adapter
 end
+
+resp = connection.get("/api2/json/nodes")
 
 nodes = JSON.parse(resp.body, symbolize_names: true)[:data]
 
@@ -29,3 +34,9 @@ node = nodes.first
 
 p node[:mem].to_f / node[:maxmem].to_f
 p node[:disk].to_f / node[:maxdisk].to_f
+
+resp = connection.get("/api2/json/nodes/#{node[:node]}/qemu")
+
+qemus = JSON.parse(resp.body, symbolize_names: true)
+
+p qemus

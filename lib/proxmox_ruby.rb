@@ -29,6 +29,7 @@ module ProxmoxRuby
       c = Faraday.new(url: "https://#{hostname}:8006", ssl: {verify: false}) do |conn|
         conn.request :url_encoded
         conn.headers["Cookie"] = "PVEAuthCookie=#{ticket}"
+        conn.headers["CSRFPreventionToken"] = csrf_token
         conn.adapter Faraday.default_adapter
       end
     end

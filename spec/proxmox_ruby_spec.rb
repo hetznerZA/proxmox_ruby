@@ -100,7 +100,13 @@ describe ProxmoxRuby::ConnectionFactory do
     it "sets the ticket as a cookie value for the connection" do
       subject.build_connection
 
-      headers.should eql({ "Cookie" => "PVEAuthCookie=#{ticket}"})
+      headers["Cookie"].should eql "PVEAuthCookie=#{ticket}"
+    end
+
+    it "adds the csrf protection token so that it can handle posts as well" do
+      subject.build_connection
+
+      headers["CSRFPreventionToken"].should eql csrf_token
     end
 
     it "returns the initialised connection" do

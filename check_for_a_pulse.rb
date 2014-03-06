@@ -32,7 +32,8 @@ nodes = JSON.parse(resp.body, symbolize_names: true)[:data]
 
 node = nodes.first
 
-# p nodes
+puts "Nodes"
+p nodes
 #
 # p node[:mem].to_f / node[:maxmem].to_f
 # p node[:disk].to_f / node[:maxdisk].to_f
@@ -45,6 +46,12 @@ stor_list = JSON.parse(resp.body, symbolize_names: true)[:data]
 puts "STORAGE LIST"
 p stor_list
 
+resp = connection.get("api2/json/cluster/nextid")
+nextid = JSON.parse(resp.body, symbolize_names: true)[:data]
+
+puts "Next id"
+p nextid
+
 resp = connection.get("/api2/json/nodes/#{node[:node]}/qemu")
 
 qemus = JSON.parse(resp.body, symbolize_names: true)[:data]
@@ -52,42 +59,44 @@ qemus = JSON.parse(resp.body, symbolize_names: true)[:data]
 puts "QEMUS"
 p qemus
 
-inuse_vmids = qemus.map { |vm| vm[:vmid].to_i }
+next_vmid = nextid
 
-next_vmid = nil
-
-until next_vmid do
-  candidate_vmid = 101 + Random.rand(200)
-  unless inuse_vmids.include? candidate_vmid
-    next_vmid = candidate_vmid
-    inuse_vmids << candidate_vmid
-  end
+# resp = connection.post("/api2/json/nodes/#{node[:node]}/storage/VM_USE/content") do |req|
+#   req.body = { vmid: next_vmid, filename: "vm-#{next_vmid}-disk-1", size:"8G"}
+# end
+# 
+# puts "STORAGE CREATE"
+# p resp.status
+# p resp.body
+# 
+# resp = connection.post("/api2/json/nodes/#{node[:node]}/qemu") do |req|
+#   # p req
+#   # req.body = { vmid: next_vmid, name: "rory.is.awesome", onboot: 1, ostype: "l26", net0: "virtio,bridge=vmbr0", virtio0: "volume=VM_USE:vm-#{next_vmid}-disk-1,cache=writeback" }
+#   # req.body = { vmid: next_vmid, name: "rory.is.awesome", onboot: 1, ostype: "l26", net0: "virtio,bridge=vmbr0", virtio0: "VM_USE:12,cache=writeback" }
+#   # onboot - start at boot
+#   # VM_USE:10 trick - found here http://forum.proxmox.com/threads/12059-API-Create-KVM-with-Logical-Volume
+# end
+# 
+# puts "VM CREATE"
+# p resp.status
+# p resp.body
+# 
+resp = connection.get("/api2/json/nodes/#{node[:node]}/storage/VM_USE/content") do |req|
 end
-
-p next_vmid
-
-resp = connection.post("/api2/json/nodes/#{node[:node]}/storage/VM_USE/content") do |req|
-  req.body = { vmid: next_vmid, filename: "vm-#{next_vmid}-disk-1", size:"8G"}
-end
-
-puts "STORAGE CREATE"
-p resp.status
-p resp.body
-
-resp = connection.post("/api2/json/nodes/#{node[:node]}/qemu") do |req|
-  req.body = { vmid: next_vmid, name: "rory.is.awesome", onboot: 1, ostype: "l26", net0: "virtio,bridge=vmbr0", virtio0: "volume=VM_USE:vm-#{next_vmid}-disk-1,cache=writeback" }
-  # req.body = { vmid: next_vmid, name: "rory.is.awesome", onboot: 1, ostype: "l26", net0: "virtio,bridge=vmbr0", virtio0: "VM_USE:12,cache=writeback" }
-  # onboot - start at boot
-  # VM_USE:10 trick - found here http://forum.proxmox.com/threads/12059-API-Create-KVM-with-Logical-Volume
-end
-
-puts "VM CREATE"
-p resp.status
-p resp.body
-
-resp = connection.get("/api2/json/nodes/#{node[:node]}/storage/VM_USE/content")
 
 storage = JSON.parse(resp.body, symbolize_names: true)[:data]
 
-p storage
 
+puts "SPEC VM #100"
+resp = connection.get("/api2/json/nodes/#{node[:node]}/qemu/100/config")
+
+qemu_100 = JSON.parse(resp.body, symbolize_names: true)[:data]
+
+p qemu_100
+
+# puts "Cluster Resources"
+# resp = connection.get("/api2/json/cluster/resources")
+# 
+# cluster_res = JSON.parse(resp.body, symbolize_names: true)[:data]
+# 
+# p cluster_res
